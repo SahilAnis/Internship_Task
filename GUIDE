@@ -1,0 +1,299 @@
+Below is a **step-by-step explanation** for adding the **Advanced Threat Detection, Ethical Hacking, and Security Audits** implementation to your **GitHub repository**.
+
+---
+
+# **📌 Security Implementation Guide**
+This guide provides **step-by-step instructions** to enhance security using **intrusion detection, API security hardening, ethical hacking techniques, and security audits**. Follow the structured workflow below.
+
+---
+
+## **🔹 Week 4: Advanced Threat Detection & Web Security Enhancements**
+In this phase, we implement **real-time threat detection** and **harden API security** by restricting access and enforcing security headers.
+
+### **1️⃣ Intrusion Detection & Monitoring**
+#### **1.1 Install and Configure Fail2Ban**
+Fail2Ban monitors failed login attempts and bans suspicious IPs.
+
+**🔹 Step 1: Install Fail2Ban**
+```bash
+sudo apt update && sudo apt install fail2ban -y
+```
+
+**🔹 Step 2: Configure Fail2Ban Rules**
+Edit the jail configuration:
+```bash
+sudo nano /etc/fail2ban/jail.local
+```
+Add:
+```
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 5
+bantime = 600
+```
+
+**🔹 Step 3: Restart Fail2Ban**
+```bash
+sudo systemctl restart fail2ban
+```
+
+---
+
+### **2️⃣ API Security Hardening**
+#### **2.1 Set Up Rate Limiting**
+To prevent brute-force attacks, install `express-rate-limit`:
+```bash
+npm install express-rate-limit
+```
+
+Modify `server.js`:
+```javascript
+const rateLimit = require("express-rate-limit");
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: "Too many requests, please try again later.",
+});
+
+app.use(limiter);
+```
+
+#### **2.2 Implement CORS Restrictions**
+Install `cors`:
+```bash
+npm install cors
+```
+
+Modify `server.js`:
+```javascript
+const cors = require("cors");
+
+const corsOptions = {
+  origin: ["https://your-allowed-domain.com"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+```
+
+#### **2.3 Implement API Key Authentication**
+Modify `server.js`:
+```javascript
+function authenticateAPIKey(req, res, next) {
+  const apiKey = req.header("x-api-key");
+  if (!apiKey || apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
+
+app.use("/api", authenticateAPIKey);
+```
+
+---
+
+### **3️⃣ Security Headers & CSP Implementation**
+Install `helmet`:
+```bash
+npm install helmet
+```
+
+Modify `server.js`:
+```javascript
+const helmet = require("helmet");
+
+app.use(helmet());
+app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      objectSrc: ["'none'"],
+    },
+  })
+);
+```
+
+---
+
+## **🔹 Week 5: Ethical Hacking & Exploiting Vulnerabilities**
+This phase covers penetration testing, SQL Injection mitigation, and CSRF protection.
+
+### **1️⃣ Ethical Hacking Basics**
+#### **1.1 Perform Reconnaissance Using Nmap**
+Install **Nmap**:
+```bash
+sudo apt install nmap -y
+```
+
+Run a full scan:
+```bash
+nmap -A -T4 targetwebsite.com
+```
+
+Find open ports:
+```bash
+nmap -p- targetwebsite.com
+```
+
+---
+
+### **2️⃣ SQL Injection & Exploitation**
+#### **2.1 Install and Use SQLMap**
+```bash
+sudo apt install sqlmap -y
+```
+
+Test SQL Injection:
+```bash
+sqlmap -u "http://targetwebsite.com/product.php?id=1" --dbs
+```
+
+Dump database:
+```bash
+sqlmap -u "http://targetwebsite.com/login.php" --dump
+```
+
+#### **2.2 Prevent SQL Injection (Use Prepared Statements)**
+Modify your database queries:
+```javascript
+db.query("SELECT * FROM users WHERE username = ?", [username], (err, results) => {
+  if (err) throw err;
+  console.log(results);
+});
+```
+
+---
+
+### **3️⃣ Cross-Site Request Forgery (CSRF) Protection**
+#### **3.1 Install CSRF Protection**
+```bash
+npm install csurf cookie-parser
+```
+
+Modify `server.js`:
+```javascript
+const csrf = require("csurf");
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser());
+app.use(csrf({ cookie: true }));
+```
+
+#### **3.2 Test CSRF Vulnerabilities Using Burp Suite**
+Start Burp Suite:
+```bash
+burpsuite
+```
+- Intercept login requests.
+- Remove CSRF tokens and test authentication.
+
+---
+
+## **🔹 Week 6: Advanced Security Audits & Final Deployment Security**
+This phase ensures the application complies with **security best practices**.
+
+### **1️⃣ Security Audits & Compliance**
+#### **1.1 Install and Run OWASP ZAP**
+```bash
+sudo apt install zaproxy -y
+```
+Perform a scan:
+```bash
+zap.sh -cmd -quickurl http://yourwebsite.com -quickout report.html
+```
+
+#### **1.2 Run Lynis for System Security Audit**
+```bash
+sudo apt install lynis -y
+sudo lynis audit system
+```
+
+---
+
+### **2️⃣ Secure Deployment Practices**
+#### **2.1 Enable Automatic Security Updates**
+```bash
+sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+#### **2.2 Scan Docker Images for Vulnerabilities**
+```bash
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ubuntu:latest
+```
+
+---
+
+### **3️⃣ Final Penetration Testing**
+#### **3.1 Install Metasploit**
+```bash
+sudo apt install metasploit-framework -y
+msfconsole
+```
+
+#### **3.2 Run a Web App Exploit**
+```bash
+use exploit/unix/webapp/phpmyadmin_lfi
+set RHOSTS target-ip
+exploit
+```
+
+---
+
+## **📌 GitHub Repository Workflow**
+To **add all security implementations to your GitHub repository**, follow these steps:
+
+1️⃣ **Initialize Git (If Not Done)**
+```bash
+git init
+```
+
+2️⃣ **Create `.gitignore` File**  
+```bash
+nano .gitignore
+```
+Add:
+```
+node_modules/
+.env
+zapcli-venv/
+```
+
+3️⃣ **Commit Changes**
+```bash
+git add .
+git commit -m "Implemented security features, intrusion detection, and audits"
+```
+
+4️⃣ **Push to GitHub**
+```bash
+git branch -M main
+git remote add origin https://github.com/yourusername/secure-api.git
+git push -u origin main
+```
+
+---
+
+## **🔹 Summary of Commands**
+| **Task** | **Command** |
+|----------|------------|
+| Install Fail2Ban | `sudo apt install fail2ban -y` |
+| Setup Rate Limiting | `npm install express-rate-limit` |
+| Install Helmet for Security Headers | `npm install helmet` |
+| Scan Website with Nmap | `nmap -A -T4 targetwebsite.com` |
+| Test SQL Injection with SQLMap | `sqlmap -u "http://target.com?id=1" --dbs` |
+| Install CSRF Protection | `npm install csurf cookie-parser` |
+| Run OWASP ZAP Scan | `zap.sh -cmd -quickurl http://yourwebsite.com -quickout report.html` |
+| Run Lynis Audit | `sudo lynis audit system` |
+| Scan Docker Images | `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ubuntu:latest` |
+
+---
+
+### ✅ **This guide ensures your application is secured, audited, and penetration-tested before deployment.** 🚀  
+Let me know if you need any modifications!
